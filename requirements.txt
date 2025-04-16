@@ -1,0 +1,8 @@
+Flask
+requests
+pyjwt
+redis
+python-decouple
+pika
+pymysql
+pytz

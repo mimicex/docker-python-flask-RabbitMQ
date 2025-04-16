@@ -1,0 +1,50 @@
+# 使用 3.8 版的設定檔，通常新版本會有新的功能，並支援新的設定參數
+services:
+    rabbitMQ_cache:
+        container_name: rabbitMQ_cache
+        image: redis:alpine
+        restart: always
+        ports:
+            - '6382:6379'
+        command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PWD}
+        volumes: 
+            - rabbitMQ_cache:/data
+        networks:
+            - rabbitMQ_net
+    rabbitMQ:
+        container_name: rabbitMQ
+        image: rabbitMQ:management
+        restart: always
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+        environment:
+            - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+            - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+        volumes: 
+            - rabbitMQ_cache:/data
+        networks:
+            - rabbitMQ_net
+    rabbit_python:
+        image: "rabbit_python:latest"
+        working_dir: /rabbit_python
+        container_name: rabbit_python
+        restart: always
+        stdin_open: true
+        tty: true
+        depends_on:
+            - rabbitMQ_cache
+        ports:
+            - '5000:5000'
+        volumes:
+            #  憑證
+            - ./:/rabbit_python
+        networks:
+            - rabbitMQ_net
+
+networks:
+    rabbitMQ_net:
+        external: true
+volumes:
+    rabbitMQ_cache:
+        driver: local
